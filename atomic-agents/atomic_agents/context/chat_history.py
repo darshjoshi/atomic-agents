@@ -297,7 +297,7 @@ class ChatHistory(BaseChatHistory):
             for message_data in history_data["history"]:
                 content_info = message_data["content"]
                 content_class = self._get_class_from_string(content_info["class_name"])
-                content_instance = content_class.model_validate_json(content_info["data"])
+                content_instance = content_class.model_validate_json(content_info["data"], by_name=True)
 
                 # Process any Image objects to convert string paths back to Path objects
                 self._process_multimodal_paths(content_instance)

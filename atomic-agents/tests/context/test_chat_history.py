@@ -73,6 +73,19 @@ class MockEnumSchema(BaseIOSchema):
     color: ColorEnum = Field(..., description="Some color.")
 
 
+class MockAliasedNestedSchema(BaseIOSchema):
+    """Test nested schema with a field alias."""
+
+    item_name: str = Field(..., alias="itemName", description="A nested aliased field")
+
+
+class MockAliasedSchema(BaseIOSchema):
+    """Test schema with field aliases."""
+
+    chat_message: str = Field(..., alias="chatMessage", description="An aliased field")
+    item: MockAliasedNestedSchema = Field(..., description="A nested schema with an alias")
+
+
 @pytest.fixture
 def history():
     return ChatHistory(max_messages=5)
@@ -290,6 +303,19 @@ def test_dump_and_load_with_enum(history):
     assert new_history.max_messages == history.max_messages
     assert new_history.current_turn_id == history.current_turn_id
     assert len(new_history.history) == len(history.history)
+
+
+def test_dump_and_load_with_field_aliases(history):
+    """Test that a history holding schemas with field aliases can be loaded back."""
+    content = MockAliasedSchema(chatMessage="Hello", item=MockAliasedNestedSchema(itemName="nested"))
+    history.add_message("assistant", content)
+
+    new_history = ChatHistory()
+    new_history.load(history.dump())
+
+    assert len(new_history.history) == 1
+    assert new_history.history[0].content == content
+    assert new_history.history[0].turn_id == history.history[0].turn_id
 
 
 def test_load_invalid_data(history):
